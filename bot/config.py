@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     allowed_users: str = ""
     allowed_chat_id: int | None = None
     default_currency: str = "EUR"
-    database_url: str = "postgresql://localhost/expenses"
+    db_path: str = "expenses.db"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

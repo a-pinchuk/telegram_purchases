@@ -5,7 +5,7 @@ description = "Telegram bot for personal expense tracking"
 requires-python = ">=3.11"
 dependencies = [
     "aiogram>=3.4,<4",
-    "asyncpg>=0.29",
+    "aiosqlite>=0.20",
     "pydantic-settings>=2.0",
     "matplotlib>=3.8",
     "plotly>=6.0",

@@ -1,46 +1,53 @@
-"""Categorizer tests — require a running PostgreSQL instance.
-Set DATABASE_URL env var to run these tests.
-Skip if no database available."""
-
-import os
-
 import pytest
+import pytest_asyncio
 
-# Skip all tests in this module if no DATABASE_URL
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("DATABASE_URL"),
-    reason="DATABASE_URL not set — skipping DB tests",
-)
+from db.repository import Repository
+from services.categorizer import categorize
 
 
-@pytest.fixture
-async def repo():
-    from db.repository import Repository
-
-    r = Repository(os.environ["DATABASE_URL"])
+@pytest_asyncio.fixture
+async def repo(tmp_path):
+    r = Repository(str(tmp_path / "test.db"))
     await r.init()
     yield r
     await r.close()
 
 
+@pytest.mark.asyncio
 async def test_exact_match(repo):
-    from services.categorizer import categorize
-
     result = await categorize("lidl", repo)
     assert result is not None
     assert result.category_name == "Продукты"
 
 
+@pytest.mark.asyncio
 async def test_case_insensitive(repo):
-    from services.categorizer import categorize
-
     result = await categorize("LIDL", repo)
     assert result is not None
     assert result.category_name == "Продукты"
 
 
-async def test_unknown_store(repo):
-    from services.categorizer import categorize
+@pytest.mark.asyncio
+async def test_leroy_merlin(repo):
+    result = await categorize("leroy merlin", repo)
+    assert result is not None
+    assert result.category_name == "Бытовые товары"
 
+
+@pytest.mark.asyncio
+async def test_unknown_store(repo):
     result = await categorize("random unknown store", repo)
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_empty_description(repo):
+    result = await categorize("", repo)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_substring_match(repo):
+    result = await categorize("lidl express", repo)
+    assert result is not None
+    assert result.category_name == "Продукты"

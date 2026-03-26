@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python -c \"from bot.__main__ import main; print\\(''Imports OK''\\)\")",
+      "Bash(timeout 10 python -m bot)"
+    ]
+  }
+}

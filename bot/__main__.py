@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    repo = Repository(settings.database_url)
+    repo = Repository(settings.db_path)
     await repo.init()
 
     bot = Bot(token=settings.bot_token)
