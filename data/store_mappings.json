@@ -1,0 +1,68 @@
+{
+  "Продукты": {
+    "icon": "\ud83d\uded2",
+    "stores": [
+      "lidl", "aldi", "kaufland", "rewe", "edeka", "netto", "penny",
+      "ашан", "пятёрочка", "пятерочка", "магнит", "перекрёсток", "перекресток",
+      "дикси", "вкусвилл", "metro", "biedronka", "zabka", "żabka",
+      "carrefour", "auchan", "tesco", "spar"
+    ]
+  },
+  "Бытовые товары": {
+    "icon": "\ud83c\udfe0",
+    "stores": [
+      "leroy merlin", "леруа", "ikea", "икея", "obi", "castorama",
+      "bauhaus", "hornbach", "action", "tedi", "pepco"
+    ]
+  },
+  "Одежда": {
+    "icon": "\ud83d\udc55",
+    "stores": [
+      "zara", "h&m", "uniqlo", "reserved", "sinsay", "house",
+      "cropp", "pull&bear", "bershka", "c&a", "primark", "tk maxx"
+    ]
+  },
+  "Транспорт": {
+    "icon": "\ud83d\ude97",
+    "stores": [
+      "uber", "bolt", "яндекс такси", "бензин", "топливо",
+      "orlen", "shell", "bp", "circle k", "парковка", "parking"
+    ]
+  },
+  "Рестораны и кафе": {
+    "icon": "\ud83c\udf7d\ufe0f",
+    "stores": [
+      "ресторан", "кафе", "бар", "макдональдс", "kfc", "бургер",
+      "mcdonalds", "burger king", "subway", "pizza", "пицца",
+      "суши", "sushi", "starbucks", "costa"
+    ]
+  },
+  "Здоровье": {
+    "icon": "\ud83d\udc8a",
+    "stores": [
+      "аптека", "pharmacy", "apteka", "rossmann", "dm",
+      "стоматолог", "врач", "клиника"
+    ]
+  },
+  "Развлечения": {
+    "icon": "\ud83c\udfac",
+    "stores": [
+      "кино", "cinema", "steam", "netflix", "spotify", "youtube",
+      "театр", "концерт", "боулинг", "бассейн"
+    ]
+  },
+  "Коммунальные": {
+    "icon": "\ud83d\udcb1",
+    "stores": [
+      "жкх", "электричество", "интернет", "мобильный", "телефон",
+      "газ", "вода", "аренда", "czynsz", "prąd"
+    ]
+  },
+  "Подписки": {
+    "icon": "\ud83d\udcf1",
+    "stores": [
+      "подписка", "subscription", "apple", "google", "icloud",
+      "chatgpt", "vpn", "облако"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - bot_data:/app/data_db
+    environment:
+      - DB_PATH=/app/data_db/expenses.db
+
+volumes:
+  bot_data:
