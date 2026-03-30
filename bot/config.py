@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     allowed_chat_id: int | None = None
     default_currency: str = "EUR"
     db_path: str = "expenses.db"
+    webapp_url: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

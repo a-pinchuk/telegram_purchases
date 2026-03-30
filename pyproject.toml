@@ -10,6 +10,8 @@ dependencies = [
     "matplotlib>=3.8",
     "plotly>=6.0",
     "kaleido>=1.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
 ]
 
 [project.optional-dependencies]
@@ -19,7 +21,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["bot*", "services*", "db*"]
+include = ["bot*", "services*", "db*", "webapp*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

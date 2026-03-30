@@ -1,10 +1,12 @@
 import asyncio
 import logging
 
+import uvicorn
 from aiogram import Bot, Dispatcher
 
 from bot.config import settings
 from db.repository import Repository
+from webapp.main import create_app
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -40,9 +42,20 @@ async def main() -> None:
     dp.include_router(export_router)
     dp.include_router(expense_router)  # last — catches plain text
 
-    logger.info("Bot starting...")
+    # FastAPI web app
+    app = create_app()
+    app.state.repo = repo
+    app.state.bot_token = settings.bot_token
+
+    config = uvicorn.Config(app, host="0.0.0.0", port=8080, log_level="info")
+    server = uvicorn.Server(config)
+
+    logger.info("Starting bot + web server on :8080 ...")
     try:
-        await dp.start_polling(bot)
+        await asyncio.gather(
+            dp.start_polling(bot),
+            server.serve(),
+        )
     finally:
         await repo.close()
         await bot.session.close()

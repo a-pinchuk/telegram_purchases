@@ -1,7 +1,8 @@
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 
+from bot.config import settings
 from db.repository import Repository
 
 router = Router()
@@ -49,3 +50,22 @@ async def cmd_start(message: Message, repo: Repository) -> None:
 @router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
     await message.answer(HELP_TEXT, parse_mode="HTML")
+
+
+@router.message(Command("app"))
+async def cmd_app(message: Message, repo: Repository) -> None:
+    user = message.from_user
+    if not user:
+        return
+
+    if not settings.webapp_url:
+        await message.answer("Web-приложение не настроено.")
+        return
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="\U0001f4ca Открыть аналитику",
+            web_app=WebAppInfo(url=settings.webapp_url),
+        )]
+    ])
+    await message.answer("Нажмите кнопку, чтобы открыть аналитику расходов:", reply_markup=kb)
