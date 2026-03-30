@@ -189,13 +189,16 @@ class Repository:
             return self._row_to_expense(row) if row else None
 
     async def get_expenses(
-        self, user_id: int, start: str, end: str, currency: str | None = None
+        self, user_id: int | None, start: str, end: str, currency: str | None = None
     ) -> list[Expense]:
         assert self._db
         query = """SELECT e.*, c.name as category_name, COALESCE(c.icon, '') as category_icon
                    FROM expenses e LEFT JOIN categories c ON e.category_id = c.id
-                   WHERE e.user_id=? AND e.created_at >= ? AND e.created_at < ?"""
-        params: list = [user_id, start, end]
+                   WHERE e.created_at >= ? AND e.created_at < ?"""
+        params: list = [start, end]
+        if user_id is not None:
+            query += " AND e.user_id=?"
+            params.append(user_id)
         if currency:
             query += " AND e.currency=?"
             params.append(currency)
@@ -207,17 +210,20 @@ class Repository:
     # ── Aggregation ────────────────────────────────────────
 
     async def get_category_totals(
-        self, user_id: int, start: str, end: str, currency: str
+        self, user_id: int | None, start: str, end: str, currency: str
     ) -> list[CategoryTotal]:
         assert self._db
-        async with self._db.execute(
-            """SELECT COALESCE(c.name, 'Другое') as name, COALESCE(c.icon, '📦') as icon,
+        query = """SELECT COALESCE(c.name, 'Другое') as name, COALESCE(c.icon, '📦') as icon,
                       SUM(e.amount) as total, COUNT(*) as cnt
                FROM expenses e LEFT JOIN categories c ON e.category_id = c.id
-               WHERE e.user_id=? AND e.created_at >= ? AND e.created_at < ? AND e.currency=?
-               GROUP BY c.name ORDER BY total DESC""",
-            (user_id, start, end, currency),
-        ) as cur:
+               WHERE e.created_at >= ? AND e.created_at < ? AND e.currency=?"""
+        params: list = [start, end, currency]
+        if user_id is not None:
+            query += " AND e.user_id=?"
+            params.append(user_id)
+        query += " GROUP BY c.name ORDER BY total DESC"
+
+        async with self._db.execute(query, params) as cur:
             rows = [CategoryTotal(name=r["name"], icon=r["icon"], total=r["total"], count=r["cnt"]) async for r in cur]
 
         grand_total = sum(r.total for r in rows)
@@ -226,54 +232,67 @@ class Repository:
         return rows
 
     async def get_daily_totals(
-        self, user_id: int, start: str, end: str, currency: str
+        self, user_id: int | None, start: str, end: str, currency: str
     ) -> list[DailyTotal]:
         assert self._db
-        async with self._db.execute(
-            """SELECT date(e.created_at) as day, SUM(e.amount) as total
+        query = """SELECT date(e.created_at) as day, SUM(e.amount) as total
                FROM expenses e
-               WHERE e.user_id=? AND e.created_at >= ? AND e.created_at < ? AND e.currency=?
-               GROUP BY day ORDER BY day""",
-            (user_id, start, end, currency),
-        ) as cur:
+               WHERE e.created_at >= ? AND e.created_at < ? AND e.currency=?"""
+        params: list = [start, end, currency]
+        if user_id is not None:
+            query += " AND e.user_id=?"
+            params.append(user_id)
+        query += " GROUP BY day ORDER BY day"
+
+        async with self._db.execute(query, params) as cur:
             return [DailyTotal(date=r["day"], total=r["total"]) async for r in cur]
 
     async def get_monthly_totals(
-        self, user_id: int, start: str, end: str, currency: str
+        self, user_id: int | None, start: str, end: str, currency: str
     ) -> list[tuple[str, float]]:
         assert self._db
-        async with self._db.execute(
-            """SELECT strftime('%Y-%m', e.created_at) as month, SUM(e.amount) as total
+        query = """SELECT strftime('%Y-%m', e.created_at) as month, SUM(e.amount) as total
                FROM expenses e
-               WHERE e.user_id=? AND e.created_at >= ? AND e.created_at < ? AND e.currency=?
-               GROUP BY month ORDER BY month""",
-            (user_id, start, end, currency),
-        ) as cur:
+               WHERE e.created_at >= ? AND e.created_at < ? AND e.currency=?"""
+        params: list = [start, end, currency]
+        if user_id is not None:
+            query += " AND e.user_id=?"
+            params.append(user_id)
+        query += " GROUP BY month ORDER BY month"
+
+        async with self._db.execute(query, params) as cur:
             return [(r["month"], r["total"]) async for r in cur]
 
     async def get_monthly_category_totals(
-        self, user_id: int, start: str, end: str, currency: str
+        self, user_id: int | None, start: str, end: str, currency: str
     ) -> list[tuple[str, str, str, float]]:
         assert self._db
-        async with self._db.execute(
-            """SELECT strftime('%Y-%m', e.created_at) as month,
+        query = """SELECT strftime('%Y-%m', e.created_at) as month,
                       COALESCE(c.name, 'Другое') as name,
                       COALESCE(c.icon, '📦') as icon,
                       SUM(e.amount) as total
                FROM expenses e LEFT JOIN categories c ON e.category_id = c.id
-               WHERE e.user_id=? AND e.created_at >= ? AND e.created_at < ? AND e.currency=?
-               GROUP BY month, c.name ORDER BY month, total DESC""",
-            (user_id, start, end, currency),
-        ) as cur:
+               WHERE e.created_at >= ? AND e.created_at < ? AND e.currency=?"""
+        params: list = [start, end, currency]
+        if user_id is not None:
+            query += " AND e.user_id=?"
+            params.append(user_id)
+        query += " GROUP BY month, c.name ORDER BY month, total DESC"
+
+        async with self._db.execute(query, params) as cur:
             return [(r["month"], r["name"], r["icon"], r["total"]) async for r in cur]
 
-    async def get_currencies_used(self, user_id: int, start: str, end: str) -> list[str]:
+    async def get_currencies_used(self, user_id: int | None, start: str, end: str) -> list[str]:
         assert self._db
-        async with self._db.execute(
-            """SELECT DISTINCT currency FROM expenses
-               WHERE user_id=? AND created_at >= ? AND created_at < ? ORDER BY currency""",
-            (user_id, start, end),
-        ) as cur:
+        query = """SELECT DISTINCT currency FROM expenses
+               WHERE created_at >= ? AND created_at < ?"""
+        params: list = [start, end]
+        if user_id is not None:
+            query += " AND user_id=?"
+            params.append(user_id)
+        query += " ORDER BY currency"
+
+        async with self._db.execute(query, params) as cur:
             return [row["currency"] async for row in cur]
 
     # ── Private ────────────────────────────────────────────

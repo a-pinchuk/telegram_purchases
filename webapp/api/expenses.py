@@ -20,9 +20,10 @@ async def list_expenses(
     user_id: int = Depends(get_current_user_id),
     repo: Repository = Depends(get_repo),
 ):
-    """List expenses with filters."""
+    """List expenses with filters. Shows all users' data (shared tracker)."""
     p = parse_period(period)
-    expenses = await repo.get_expenses(user_id, p.start, p.end, currency)
+    # user_id=None to show all users' expenses
+    expenses = await repo.get_expenses(None, p.start, p.end, currency)
 
     if category:
         expenses = [e for e in expenses if e.category_name == category]

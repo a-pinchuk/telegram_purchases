@@ -21,14 +21,15 @@ async def get_summary(
     """Dashboard summary: total, count, average, delta vs previous period."""
     p = parse_period(period)
 
-    categories = await repo.get_category_totals(user_id, p.start, p.end, currency)
-    expenses = await repo.get_expenses(user_id, p.start, p.end, currency)
+    # Show all users' data (shared family tracker)
+    categories = await repo.get_category_totals(None, p.start, p.end, currency)
+    expenses = await repo.get_expenses(None, p.start, p.end, currency)
     total = sum(c.total for c in categories)
     count = len(expenses)
     average = total / count if count else 0
 
     prev_p = get_previous_period(p)
-    prev_categories = await repo.get_category_totals(user_id, prev_p.start, prev_p.end, currency)
+    prev_categories = await repo.get_category_totals(None, prev_p.start, prev_p.end, currency)
     prev_total = sum(c.total for c in prev_categories)
     delta_pct = ((total - prev_total) / prev_total * 100) if prev_total else 0
 
@@ -52,7 +53,7 @@ async def get_category_totals(
 ):
     """Category breakdown for charts."""
     p = parse_period(period)
-    categories = await repo.get_category_totals(user_id, p.start, p.end, currency)
+    categories = await repo.get_category_totals(None, p.start, p.end, currency)
     return [
         {
             "name": c.name,
@@ -74,7 +75,7 @@ async def get_daily_totals(
 ):
     """Daily totals for bar chart."""
     p = parse_period(period)
-    daily = await repo.get_daily_totals(user_id, p.start, p.end, currency)
+    daily = await repo.get_daily_totals(None, p.start, p.end, currency)
     return [{"date": d.date, "total": round(d.total, 2)} for d in daily]
 
 
@@ -100,7 +101,7 @@ async def get_monthly_totals(
         end_year += 1
     end = date(end_year, end_month, 1).isoformat()
 
-    monthly = await repo.get_monthly_totals(user_id, start, end, currency)
+    monthly = await repo.get_monthly_totals(None, start, end, currency)
     return [{"month": m[0], "total": round(m[1], 2)} for m in monthly]
 
 
@@ -113,7 +114,7 @@ async def get_weekday_totals(
 ):
     """Spending by day of week for heatmap."""
     p = parse_period(period)
-    expenses = await repo.get_expenses(user_id, p.start, p.end, currency)
+    expenses = await repo.get_expenses(None, p.start, p.end, currency)
 
     weekday_totals = [0.0] * 7
     weekday_counts = [0] * 7
@@ -123,7 +124,7 @@ async def get_weekday_totals(
         weekday_totals[wd] += exp.amount
         weekday_counts[wd] += 1
 
-    days_ru = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    days_ru = ["\u041f\u043d", "\u0412\u0442", "\u0421\u0440", "\u0427\u0442", "\u041f\u0442", "\u0421\u0431", "\u0412\u0441"]
     return [
         {"day": days_ru[i], "day_index": i, "total": round(weekday_totals[i], 2), "count": weekday_counts[i]}
         for i in range(7)
@@ -138,47 +139,8 @@ async def get_currencies(
 ):
     """List currencies used in a period."""
     p = parse_period(period)
-    currencies = await repo.get_currencies_used(user_id, p.start, p.end)
+    currencies = await repo.get_currencies_used(None, p.start, p.end)
     if not currencies:
         default = await repo.get_user_currency(user_id)
         currencies = [default]
     return currencies
-
-
-@router.get("/debug")
-async def debug_info(
-    user_id: int = Depends(get_current_user_id),
-    repo: Repository = Depends(get_repo),
-):
-    """Debug endpoint to check data state."""
-    today = date.today()
-    # Get ALL expenses for this user (no period filter) — last 50
-    all_expenses = await repo.get_expenses(user_id, "2020-01-01", "2030-01-01")
-    month_start = today.replace(day=1).isoformat()
-    next_month = today.month + 1
-    next_year = today.year
-    if next_month > 12:
-        next_month = 1
-        next_year += 1
-    month_end = date(next_year, next_month, 1).isoformat()
-
-    month_expenses = await repo.get_expenses(user_id, month_start, month_end)
-
-    return {
-        "user_id": user_id,
-        "today": today.isoformat(),
-        "month_range": {"start": month_start, "end": month_end},
-        "total_all_time": len(all_expenses),
-        "total_this_month": len(month_expenses),
-        "recent_5": [
-            {
-                "id": e.id,
-                "amount": e.amount,
-                "currency": e.currency,
-                "description": e.description,
-                "created_at": e.created_at,
-                "user_id": e.user_id,
-            }
-            for e in all_expenses[:5]
-        ],
-    }
