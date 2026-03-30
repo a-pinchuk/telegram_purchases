@@ -59,13 +59,26 @@ async def cmd_app(message: Message, repo: Repository) -> None:
         return
 
     if not settings.webapp_url:
-        await message.answer("Web-приложение не настроено.")
+        await message.answer("Web-приложение \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043e.")
         return
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="\U0001f4ca Открыть аналитику",
-            web_app=WebAppInfo(url=settings.webapp_url),
-        )]
-    ])
-    await message.answer("Нажмите кнопку, чтобы открыть аналитику расходов:", reply_markup=kb)
+    chat_type = message.chat.type if message.chat else "private"
+
+    if chat_type == "private":
+        # In private chats, use native WebApp button
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="\U0001f4ca \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443",
+                web_app=WebAppInfo(url=settings.webapp_url),
+            )]
+        ])
+    else:
+        # In group chats, use regular URL button (web_app not supported in groups)
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="\U0001f4ca \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443",
+                url=settings.webapp_url,
+            )]
+        ])
+
+    await message.answer("\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043a\u043d\u043e\u043f\u043a\u0443, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443 \u0440\u0430\u0441\u0445\u043e\u0434\u043e\u0432:", reply_markup=kb)

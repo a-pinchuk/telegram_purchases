@@ -22,8 +22,8 @@ class AccessMiddleware(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         if isinstance(event, Update):
-            chat = None
             user = None
+            chat = None
 
             if event.message:
                 chat = event.message.chat
@@ -32,17 +32,17 @@ class AccessMiddleware(BaseMiddleware):
                 chat = event.callback_query.message.chat
                 user = event.callback_query.from_user
 
-            # Check chat restriction
-            if self._allowed_chat_id and chat:
-                if chat.id != self._allowed_chat_id:
-                    # Allow private chats with allowed users, or the specific group
-                    if chat.type == "private" and self._allowed_users and user and user.id not in self._allowed_users:
-                        return None
-                    elif chat.type != "private" and chat.id != self._allowed_chat_id:
-                        return None
+            # Private chat: check user whitelist (if configured)
+            if chat and chat.type == "private":
+                if self._allowed_users and user and user.id not in self._allowed_users:
+                    return None
 
-            # Check user restriction (only if list is non-empty)
-            if self._allowed_users and user and user.id not in self._allowed_users:
-                return None
+            # Group/supergroup chat: check chat whitelist (if configured)
+            elif chat and chat.type in ("group", "supergroup"):
+                if self._allowed_chat_id and chat.id != self._allowed_chat_id:
+                    return None
+                # Also check user whitelist in groups
+                if self._allowed_users and user and user.id not in self._allowed_users:
+                    return None
 
         return await handler(event, data)

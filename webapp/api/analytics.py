@@ -143,3 +143,42 @@ async def get_currencies(
         default = await repo.get_user_currency(user_id)
         currencies = [default]
     return currencies
+
+
+@router.get("/debug")
+async def debug_info(
+    user_id: int = Depends(get_current_user_id),
+    repo: Repository = Depends(get_repo),
+):
+    """Debug endpoint to check data state."""
+    today = date.today()
+    # Get ALL expenses for this user (no period filter) — last 50
+    all_expenses = await repo.get_expenses(user_id, "2020-01-01", "2030-01-01")
+    month_start = today.replace(day=1).isoformat()
+    next_month = today.month + 1
+    next_year = today.year
+    if next_month > 12:
+        next_month = 1
+        next_year += 1
+    month_end = date(next_year, next_month, 1).isoformat()
+
+    month_expenses = await repo.get_expenses(user_id, month_start, month_end)
+
+    return {
+        "user_id": user_id,
+        "today": today.isoformat(),
+        "month_range": {"start": month_start, "end": month_end},
+        "total_all_time": len(all_expenses),
+        "total_this_month": len(month_expenses),
+        "recent_5": [
+            {
+                "id": e.id,
+                "amount": e.amount,
+                "currency": e.currency,
+                "description": e.description,
+                "created_at": e.created_at,
+                "user_id": e.user_id,
+            }
+            for e in all_expenses[:5]
+        ],
+    }
