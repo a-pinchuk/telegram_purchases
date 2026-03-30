@@ -59,13 +59,43 @@ async def cmd_app(message: Message, repo: Repository) -> None:
         return
 
     if not settings.webapp_url:
-        await message.answer("Web-приложение \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043e.")
+        await message.answer("Web-\u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u043e.")
         return
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="\U0001f4ca \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443",
-            web_app=WebAppInfo(url=settings.webapp_url),
-        )]
-    ])
-    await message.answer("\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043a\u043d\u043e\u043f\u043a\u0443, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443 \u0440\u0430\u0441\u0445\u043e\u0434\u043e\u0432:", reply_markup=kb)
+    is_private = message.chat and message.chat.type == "private"
+
+    if is_private:
+        # Private chat: native WebApp button (opens inside Telegram)
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="\U0001f4ca \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443",
+                web_app=WebAppInfo(url=settings.webapp_url),
+            )]
+        ])
+        await message.answer(
+            "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043a\u043d\u043e\u043f\u043a\u0443:",
+            reply_markup=kb,
+        )
+    else:
+        # Group chat: web_app buttons don't work here.
+        # Use direct link if webapp_short_name is configured (t.me/bot/shortname)
+        # Otherwise fall back to URL button
+        bot_info = await message.bot.get_me()
+        if settings.webapp_short_name:
+            link = f"https://t.me/{bot_info.username}/{settings.webapp_short_name}"
+            await message.answer(
+                f"\U0001f4ca <b>\u0410\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0430 \u0440\u0430\u0441\u0445\u043e\u0434\u043e\u0432</b>\n\n"
+                f"\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u0432 Telegram:\n{link}",
+                parse_mode="HTML",
+            )
+        else:
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="\U0001f4ca \u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443",
+                    url=settings.webapp_url,
+                )]
+            ])
+            await message.answer(
+                "\U0001f4ca \u041e\u0442\u043a\u0440\u043e\u0439\u0442\u0435 \u0430\u043d\u0430\u043b\u0438\u0442\u0438\u043a\u0443 \u043f\u043e \u043a\u043d\u043e\u043f\u043a\u0435 \u043d\u0438\u0436\u0435:",
+                reply_markup=kb,
+            )

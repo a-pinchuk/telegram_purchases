@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     default_currency: str = "EUR"
     db_path: str = "expenses.db"
     webapp_url: str = ""
+    webapp_short_name: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
