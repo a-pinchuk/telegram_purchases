@@ -20,7 +20,6 @@ export default function History() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       setLoading(true);
       try {
@@ -44,27 +43,39 @@ export default function History() {
   }, [period, selectedCategory, search]);
 
   return (
-    <div className="px-4 pt-4 space-y-4">
+    <div className="px-4 pt-5 pb-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">История</h1>
+        <div>
+          <h1 className="text-xl font-bold text-text-primary">История</h1>
+          <p className="text-[12px] text-text-muted mt-0.5">
+            {periodLabel} &middot; {totalCount} записей
+          </p>
+        </div>
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
-      <input
-        type="text"
-        placeholder="Поиск по описанию..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-bg-card border border-white/5 rounded-xl px-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-accent-primary/50 transition-colors"
-      />
+      {/* Search */}
+      <div className="relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input
+          type="text"
+          placeholder="Поиск..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-bg-card border border-border rounded-xl pl-9 pr-3 py-2.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-accent-primary/40 focus:ring-1 focus:ring-accent-primary/20 transition-all"
+        />
+      </div>
 
+      {/* Category chips */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
         <button
           onClick={() => setSelectedCategory("")}
-          className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+          className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all flex-shrink-0 border ${
             !selectedCategory
-              ? "bg-accent-primary/20 text-accent-secondary"
-              : "text-text-muted"
+              ? "bg-accent-primary/15 text-accent-secondary border-accent-primary/30"
+              : "text-text-muted border-border hover:border-border-hover"
           }`}
         >
           Все
@@ -72,11 +83,11 @@ export default function History() {
         {categories.map((cat) => (
           <button
             key={cat.id}
-            onClick={() => setSelectedCategory(cat.name)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+            onClick={() => setSelectedCategory(cat.name === selectedCategory ? "" : cat.name)}
+            className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all flex-shrink-0 border ${
               selectedCategory === cat.name
-                ? "bg-accent-primary/20 text-accent-secondary"
-                : "text-text-muted"
+                ? "bg-accent-primary/15 text-accent-secondary border-accent-primary/30"
+                : "text-text-muted border-border hover:border-border-hover"
             }`}
           >
             {cat.icon} {cat.name}
@@ -84,16 +95,14 @@ export default function History() {
         ))}
       </div>
 
-      <div className="text-xs text-text-muted">
-        {periodLabel} &middot; {totalCount} записей
-      </div>
-
       {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="w-6 h-6 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="skeleton h-16 rounded-2xl" />
+          ))}
         </div>
       ) : (
-        <TransactionList expenses={expenses} showAll title="" />
+        <TransactionList expenses={expenses} showAll />
       )}
     </div>
   );

@@ -18,7 +18,6 @@ export default function Analytics() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function load() {
       setLoading(true);
       try {
@@ -50,23 +49,37 @@ export default function Analytics() {
 
   if (loading && !daily.length) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full animate-spin" />
+      <div className="px-4 pt-6 space-y-4">
+        <div className="skeleton h-8 w-36" />
+        <div className="skeleton h-52 w-full rounded-2xl" />
+        <div className="skeleton h-52 w-full rounded-2xl" />
+        <div className="skeleton h-36 w-full rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="px-4 pt-4 space-y-4">
+    <div className="px-4 pt-5 pb-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">Аналитика</h1>
+        <div>
+          <h1 className="text-xl font-bold text-text-primary">Аналитика</h1>
+          <p className="text-[12px] text-text-muted mt-0.5">Детальная статистика</p>
+        </div>
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
-      <DailyBarChart data={daily} currency={currency} />
-      <TrendLineChart data={monthly} currency={currency} />
-      <WeekdayHeatmap data={weekday} currency={currency} />
-      <CategoryDonut data={categories} currency={currency} />
+      <div className="animate-fade-up">
+        <DailyBarChart data={daily} currency={currency} />
+      </div>
+      <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
+        <TrendLineChart data={monthly} currency={currency} />
+      </div>
+      <div className="animate-fade-up" style={{ animationDelay: "0.15s" }}>
+        <WeekdayHeatmap data={weekday} currency={currency} />
+      </div>
+      <div className="animate-fade-up" style={{ animationDelay: "0.2s" }}>
+        <CategoryDonut data={categories} currency={currency} />
+      </div>
     </div>
   );
 }

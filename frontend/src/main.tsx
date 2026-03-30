@@ -7,8 +7,8 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
   tg.expand();
-  tg.setHeaderColor("#0f0f0f");
-  tg.setBackgroundColor("#0f0f0f");
+  tg.setHeaderColor("#09090b");
+  tg.setBackgroundColor("#09090b");
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

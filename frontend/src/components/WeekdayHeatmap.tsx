@@ -1,4 +1,4 @@
-import { WeekdayTotal } from "../types";
+import { WeekdayTotal, CURRENCY_SYMBOLS } from "../types";
 
 interface Props {
   data: WeekdayTotal[];
@@ -6,27 +6,52 @@ interface Props {
 }
 
 export default function WeekdayHeatmap({ data, currency }: Props) {
+  const sym = CURRENCY_SYMBOLS[currency] || currency;
   const maxTotal = Math.max(...data.map((d) => d.total), 1);
+  const totalAll = data.reduce((s, d) => s + d.total, 0);
+  const maxDay = data.reduce((a, b) => (b.total > a.total ? b : a), data[0]);
 
   return (
-    <div className="bg-bg-card rounded-2xl p-4 border border-white/5">
-      <h3 className="text-sm font-semibold text-text-primary mb-3">По дням недели</h3>
-      <div className="grid grid-cols-7 gap-1.5">
+    <div className="bg-bg-card rounded-2xl p-5 border border-border">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-semibold text-text-primary">Дни недели</h3>
+        {maxDay && maxDay.total > 0 && (
+          <span className="text-[11px] text-text-muted">
+            Макс: {maxDay.day}
+          </span>
+        )}
+      </div>
+      <p className="text-[11px] text-text-muted mb-4">
+        Всего: {totalAll.toLocaleString("ru-RU", {maximumFractionDigits: 0})} {sym}
+      </p>
+      <div className="grid grid-cols-7 gap-2">
         {data.map((d) => {
           const intensity = d.total / maxTotal;
-          const bg = `rgba(99, 102, 241, ${Math.max(intensity * 0.8, 0.05)})`;
+          const isMax = d === maxDay && d.total > 0;
           return (
-            <div key={d.day_index} className="flex flex-col items-center gap-1">
-              <span className="text-[10px] text-text-muted">{d.day}</span>
+            <div key={d.day_index} className="flex flex-col items-center gap-1.5">
+              <span className={`text-[10px] font-medium ${isMax ? "text-accent-primary" : "text-text-muted"}`}>
+                {d.day}
+              </span>
               <div
-                className="w-full aspect-square rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: bg }}
+                className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                  isMax ? "ring-1 ring-accent-primary/30" : ""
+                }`}
+                style={{
+                  backgroundColor: d.total > 0
+                    ? `rgba(139, 92, 246, ${Math.max(intensity * 0.5, 0.08)})`
+                    : "rgba(39, 39, 42, 0.5)",
+                }}
               >
-                <span className="text-[10px] font-medium text-text-primary">
-                  {d.total > 0 ? d.total.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : ""}
+                <span className={`text-[10px] font-semibold ${
+                  d.total > 0 ? "text-text-primary" : "text-text-muted"
+                }`}>
+                  {d.total > 0 ? d.total.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) : "-"}
                 </span>
               </div>
-              <span className="text-[9px] text-text-muted">{d.count} шт</span>
+              <span className="text-[9px] text-text-muted">
+                {d.count > 0 ? `${d.count}x` : ""}
+              </span>
             </div>
           );
         })}
